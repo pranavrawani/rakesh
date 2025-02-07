@@ -1,207 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convert PDFs to JPG and Merge</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.16.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fa;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .upload-container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 600px;
-            margin: 0 auto 20px;
-        }
-        input[type="file"] {
-            margin: 20px 0;
-        }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 20px;
-            width: 90%;
-            max-width: 800px;
-            margin: auto;
-        }
-        .grid-item {
-            background: #fff;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            min-height: 200px;
-        }
-        .grid-item img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        button {
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
-        #errorMessage {
-            color: red;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convert PDFs to JPG and Merge</title>
+  <!-- Load libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.16.0"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #122e58;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: white;
+    }
+    /* Style for animated letters */
+    .letter {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .letter.visible {
+      opacity: 1;
+    }
+    .upload-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+    input[type="file"] {
+      margin: 20px 0;
+    }
+    .grid-container {
+      display: grid;
+      gap: 10px;
+      width: 90%;
+      max-width: 800px;
+      margin: auto;
+    }
+    .grid-item {
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      min-height: 200px;
+    }
+    .grid-item img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #errorMessage {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Convert PDFs to JPG and Merge</h1>
-    <div class="upload-container">
-        <h2>Rakesh Rawani</h2>
-        <p>Select <strong>exactly 6 PDFs</strong> to preview and convert to images.</p>
-        <input type="file" id="pdfInput" accept="application/pdf" multiple>
-        <div id="errorMessage"></div>
-    </div>
+  <h1>Convert PDFs to JPG and Merge</h1>
+  <div class="upload-container">
+    <p>Select between <strong>2 to 10 PDFs</strong> to preview and convert to images.</p>
+    <!-- Animated heading -->
+    <h2 id="animatedText">Rakesh Rawani</h2>
+    <input type="file" id="pdfInput" accept="application/pdf" multiple>
+    <div id="errorMessage"></div>
+  </div>
 
-    <div class="grid-container" id="previewGrid">
-        <div class="grid-item"></div>
-        <div class="grid-item"></div>
-        <div class="grid-item"></div>
-        <div class="grid-item"></div>
-        <div class="grid-item"></div>
-        <div class="grid-item"></div>
-    </div>
+  <div class="grid-container" id="previewGrid"></div>
 
-    <button id="downloadBtn" disabled>Download Merged PDF</button>
+  <button id="downloadBtn" disabled>Download Merged PDF</button>
 
-    <script>
-        const { jsPDF } = window.jspdf;
-        const pdfInput = document.getElementById('pdfInput');
-        const previewGrid = document.getElementById('previewGrid');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const errorMessage = document.getElementById('errorMessage');
-        let imageUrls = [];
+  <script>
+    // Animate the h2 text: "Rakesh Rawani"
+    document.addEventListener("DOMContentLoaded", function() {
+      const animatedText = document.getElementById("animatedText");
+      const text = animatedText.textContent;
+      animatedText.textContent = "";
+      // Wrap each letter in a span
+      for (let char of text) {
+        const span = document.createElement("span");
+        span.classList.add("letter");
+        span.textContent = char;
+        animatedText.appendChild(span);
+      }
+      // Reveal each letter one by one with a delay (150ms per letter)
+      const letters = animatedText.querySelectorAll(".letter");
+      letters.forEach((span, index) => {
+        setTimeout(() => {
+          span.classList.add("visible");
+        }, index * 150);
+      });
+    });
 
-        pdfInput.addEventListener('change', handleFiles);
+    const { jsPDF } = window.jspdf;
+    const pdfInput = document.getElementById('pdfInput');
+    const previewGrid = document.getElementById('previewGrid');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    let imageUrls = [];
 
-        async function handleFiles(event) {
-            const files = event.target.files;
-            if (files.length !== 6) {
-                errorMessage.textContent = 'Please select exactly 6 PDF files.';
-                downloadBtn.disabled = true;
-                clearGrid();
-                imageUrls = [];
-                return;
-            }
-            errorMessage.textContent = '';
-            imageUrls = [];
-            clearGrid();
+    pdfInput.addEventListener('change', handleFiles);
 
-            try {
-                for (let i = 0; i < files.length; i++) {
-                    const fileData = await readFileAsArrayBuffer(files[i]);
-                    const imageUrl = await convertPdfToImage(fileData);
-                    imageUrls.push(imageUrl);
+    async function handleFiles(event) {
+      const files = event.target.files;
+      if (files.length < 2 || files.length > 10) {
+        errorMessage.textContent = 'Please select between 2 to 10 PDF files.';
+        downloadBtn.disabled = true;
+        clearGrid();
+        imageUrls = [];
+        return;
+      }
+      errorMessage.textContent = '';
+      imageUrls = [];
+      clearGrid();
 
-                    // Display preview
-                    const img = document.createElement("img");
-                    img.src = imageUrl;
-                    previewGrid.children[i].innerHTML = '';
-                    previewGrid.children[i].appendChild(img);
-                }
-                downloadBtn.disabled = false;
-            } catch (error) {
-                console.error('Error processing PDFs:', error);
-                errorMessage.textContent = 'Error processing PDFs. Please try again.';
-            }
+      // Set preview grid layout (2 columns if 4 or more PDFs; otherwise 1 column)
+      previewGrid.style.gridTemplateColumns = `repeat(${files.length >= 4 ? 2 : 1}, 1fr)`;
+      previewGrid.style.gridTemplateRows = `repeat(${Math.ceil(files.length / 2)}, 1fr)`;
+
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const fileData = await readFileAsArrayBuffer(files[i]);
+          const imageUrl = await convertPdfToImage(fileData);
+          imageUrls.push(imageUrl);
+
+          // Display preview
+          const img = document.createElement("img");
+          img.src = imageUrl;
+          const div = document.createElement("div");
+          div.classList.add("grid-item");
+          div.appendChild(img);
+          previewGrid.appendChild(div);
         }
+        downloadBtn.disabled = false;
+      } catch (error) {
+        console.error('Error processing PDFs:', error);
+        errorMessage.textContent = 'Error processing PDFs. Please try again.';
+      }
+    }
 
-        function readFileAsArrayBuffer(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        }
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
 
-        function clearGrid() {
-            for (let i = 0; i < previewGrid.children.length; i++) {
-                previewGrid.children[i].innerHTML = '';
-            }
-        }
+    function clearGrid() {
+      previewGrid.innerHTML = '';
+    }
 
-        async function convertPdfToImage(pdfBytes) {
-            const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-            const page = await pdf.getPage(1);
+    async function convertPdfToImage(pdfBytes) {
+      const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+      const page = await pdf.getPage(1);
+      const scale = 2;
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: context, viewport }).promise;
+      return canvas.toDataURL("image/jpeg", 1.0);
+    }
 
-            const scale = 2;
-            const viewport = page.getViewport({ scale });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+    downloadBtn.addEventListener('click', generateMergedPDF);
 
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
+    async function generateMergedPDF() {
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const totalImages = imageUrls.length;
+      let cols, rows;
 
-            await page.render({ canvasContext: context, viewport }).promise;
+      if (totalImages === 2) {
+        cols = 1;
+        rows = 2;
+      } else if (totalImages === 3) {
+        cols = 1;
+        rows = 3;
+      } else if (totalImages === 4) {
+        cols = 2;
+        rows = 2;
+      } else if (totalImages === 5) {
+        cols = 2;
+        rows = 3;
+      } else {
+        cols = 2;
+        rows = Math.ceil(totalImages / 2);
+      }
 
-            return canvas.toDataURL("image/jpeg", 1.0);
-        }
+      const horizontalGap = 5; // 5 mm horizontal gap
+      const verticalGap = 5;   // 5 mm vertical gap (only between images in the same column)
+      const margin = 15;       // 15 mm margin on all sides
 
-        downloadBtn.addEventListener('click', generateMergedPDF);
+      const cellWidth = (pageWidth - 2 * margin - (cols - 1) * horizontalGap) / cols;
+      const cellHeight = (pageHeight - 2 * margin - (rows - 1) * verticalGap) / rows;
 
-        async function generateMergedPDF() {
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            
-            const horizontalGap = 5;  // Adjusted for maximum image size
-            const verticalGap = 10;   // Adjusted for maximum image size
+      for (let i = 0; i < totalImages; i++) {
+        const x = margin + (i % cols) * (cellWidth + horizontalGap);
+        const y = margin + Math.floor(i / cols) * (cellHeight + verticalGap);
 
-            const cols = 2;
-            const rows = 3;
-            const margin = 15; // Equal left and right margin
-            const cellWidth = (pageWidth - 2 * margin - horizontalGap) / cols;
-            const cellHeight = (pageHeight - 2 * margin - verticalGap * (rows - 1)) / rows;
+        const img = new Image();
+        img.src = imageUrls[i];
 
-            for (let i = 0; i < 6; i++) {
-                const x = margin + (i % 2) * (cellWidth + horizontalGap);
-                const y = margin + Math.floor(i / 2) * (cellHeight + verticalGap);
+        await new Promise((resolve) => {
+          img.onload = () => {
+            pdf.addImage(img, 'JPEG', x, y, cellWidth, cellHeight);
+            resolve();
+          };
+        });
+      }
 
-                const img = new Image();
-                img.src = imageUrls[i];
-
-                await new Promise((resolve) => {
-                    img.onload = () => {
-                        pdf.addImage(img, 'JPEG', x, y, cellWidth, cellHeight);
-                        resolve();
-                    };
-                });
-            }
-
-            pdf.save('merged_pdfs.pdf');
-        }
-    </script>
+      pdf.save('merged_pdfs.pdf');
+    }
+  </script>
 </body>
 </html>
